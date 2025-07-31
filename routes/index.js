@@ -2,17 +2,33 @@ const router = require('express').Router();
 const passport = require('passport');
 const passwordUtils = require('../lib/passwordUtils');
 const connection = require('../config/database');
-const User = connection.models.User;
+const pool = require("../config/database");
+// const User = connection.models.User;
 
 /**
  * -------------- POST ROUTES ----------------
  */
 
  // TODO
- router.post('/login', (req, res, next) => {});
+ router.post('/login', passport.authenticate('local', { failureRedirect: "/login-failure", successRedirect: "login-success"}));
 
  // TODO
- router.post('/register', (req, res, next) => {});
+ router.post('/register', async (req, res, next) => {
+    const password = passwordUtils.genPassword(req.body.password);
+
+    try {
+        await pool.query(
+        "INSERT INTO users (username, password) VALUES ($1, $2)",
+        [req.body.username, password]
+        );
+
+        res.redirect("/login");
+    } catch(err) {
+        console.error("Error creating user: ", err);
+        res.status(500).send("Error registering user");
+        
+    }
+ });
 
 
  /**
